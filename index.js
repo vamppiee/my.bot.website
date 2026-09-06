@@ -58,8 +58,10 @@ client.on('interactionCreate', async interaction => {
         const imageAttachment = interaction.options.getAttachment('image');
         const imageUrl = imageAttachment.url;
         try {
+            // Lấy thông tin bot trong server hiện tại và dùng hàm edit đúng chuẩn
             const botMember = await interaction.guild.members.fetchMe();
-            await botMember.setAvatar(imageUrl);
+            await botMember.edit({ avatar: imageUrl });
+            
             await interaction.reply({ 
                 content: `Dạaaaa avatar riêng của bot trong server này đã được đổi thành công rùi nè senpai nhaaa! ✨💖`, 
                 ephemeral: true 
@@ -67,7 +69,7 @@ client.on('interactionCreate', async interaction => {
         } catch (error) {
             console.error(error);
             await interaction.reply({ 
-                content: 'Hổng đổi được avatar do bot thiếu quyền quản lý trong server gòi senpai ơi! 🥺💔', 
+                content: 'Hổng đổi được avatar do lỗi thực thi hoặc thiếu quyền hệ thống gòi senpai ơi! 🥺💔', 
                 ephemeral: true 
             });
         }
