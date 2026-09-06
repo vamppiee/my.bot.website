@@ -1,35 +1,66 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 const client = new Client({ 
-    intents: [
-        GatewayIntentBits.Guilds, 
-        GatewayIntentBits.GuildMessages, 
-        GatewayIntentBits.MessageContent 
-    ] 
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] 
 });
 
-client.once('ready', () => {
-    console.log(`Dạaaaa bot đã thức giấc cùng senpai: ${client.user.tag}`);
+// 1. Khai báo cấu trúc lệnh Slash Command có cả ô "url" và ô "image"
+const command = new SlashCommandBuilder()
+    .setName('tuy-chon')
+    .setDescription('Lệnh tùy chỉnh đổi thông tin bot có kèm URL và Ảnh!')
+    .addStringOption(option =>
+        option.setName('url')
+            .setDescription('Nhập đường dẫn URL của senpai vào đây')
+            .setRequired(true))
+    .addImageOption(option =>
+        option.setName('image')
+            .setDescription('Chọn hoặc tải ảnh lên để làm avatar/hình nền')
+            .setRequired(true));
+
+client.once('ready', async () => {
+    console.log(`Dạaaaa bot đã thức giấc: ${client.user.tag}`);
+
+    // Đăng ký lệnh lên Discord tự động
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+    try {
+        await rest.put(
+            Routes.applicationCommands(client.user.id),
+            { body: [command.toJSON()] },
+        );
+        console.log('Đã đăng ký thành công lệnh tùy chọn có URL và Image cho bot! 🎉');
+    } catch (error) {
+        console.error(error);
+    }
 });
 
-// Lắng nghe lệnh dạng chat (hoặc slash command)
-client.on('messageCreate', async message => {
-    if (message.author.bot) return;
+// 2. Lắng nghe khi senpai dùng lệnh trong Discord
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
 
-    // Lệnh test đổi bio nhanh: gõ "!doibio Nội_dung_bio_mới"
-    if (message.content.startsWith('!doibio ')) {
-        const bioMoi = message.content.slice(8);
+    if (interaction.commandName === 'tuy-chon') {
+        const urlValue = interaction.options.getString('url');
+        const imageAttachment = interaction.options.getAttachment('image');
+        const imageUrl = imageAttachment.url;
+
         try {
-            const botMember = message.guild.members.me;
-            // Cập nhật bio riêng cho server này
-            await botMember.edit({ bio: bioMoi });
-            message.reply(`Dạaaaa bio riêng cho server này đã được đổi thành: **${bioMoi}** rùi nha senpai ơi! 🌸✨`);
+            const botMember = interaction.guild.members.me;
+
+            // Thực hiện đổi avatar hoặc xử lý URL tùy theo ý senpai ở đây
+            // Ví dụ này sẽ tiến hành đổi avatar riêng của bot trong server bằng tấm ảnh senpai vừa chọn:
+            await botMember.edit({ avatar: imageUrl });
+
+            await interaction.reply({ 
+                content: `Dạaaaaa! Em đã nhận được:\n🔗 **URL:** ${urlValue}\n🖼️ **Image:** ${imageUrl}\nVà đã cập nhật thành công cho server này rùi nha senpai ơi! 🌸✨`, 
+                ephemeral: true 
+            });
         } catch (error) {
             console.error(error);
-            message.reply('Hổng đổi được bio gòi senpai ơi, kiểm tra lại quyền của bot giúp em nha! 🥺💔');
+            await interaction.reply({ 
+                content: 'Hổng đổi được rồi senpai ơi, kiểm tra lại quyền của bot giúp em nha! 🥺💔', 
+                ephemeral: true 
+            });
         }
     }
 });
 
-// Đăng nhập bot bằng Token bảo mật từ Render
 client.login(process.env.DISCORD_TOKEN);
