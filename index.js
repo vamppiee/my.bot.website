@@ -1,30 +1,79 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const http = require('http');
 
-// Tạo một web server ảo siêu mini để Render không bao giờ quét thiếu port nữa
+// Web server ảo giữ cổng cho Render không bị timeout
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Dạaaaa bot Discord của Thảo senpai vẫn đang chạy mượt mà nha! 🌸\n');
+    res.end('Bot is running!\n');
 });
+server.listen(process.env.PORT || 3000);
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Web server ảo đang lắng nghe trên cổng ${PORT}`);
-});
-
-// Khởi động bot Discord
 const client = new Client({ 
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] 
 });
 
-client.once('ready', () => {
-    console.log(`Dạaaaa bot đã thức giấc thành công: ${client.user.tag}`);
+// Khai báo 2 lệnh /dbio và /davt
+const commands = [
+    new SlashCommandBuilder()
+        .setName('dbio')
+        .setDescription('Đổi bio riêng cho bot')
+        .addStringOption(option =>
+            option.setName('text')
+                .setDescription('Nội dung bio mới')
+                .setRequired(true)),
+
+    new SlashCommandBuilder()
+        .setName('davt')
+        .setDescription('Đổi avatar riêng cho bot')
+        .addImageOption(option =>
+            option.setName('image')
+                .setDescription('Chọn ảnh avatar mới')
+                .setRequired(true))
+].map(command => command.toJSON());
+
+client.once('ready', async () => {
+    console.log(`Dạaaaa bot đã thức giấc: ${client.user.tag}`);
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+    try {
+        await rest.put(
+            Routes.applicationCommands(client.user.id),
+            { body: commands },
+        );
+        console.log('Đã đăng ký thành công 2 lệnh /dbio và /davt!');
+    } catch (error) {
+        console.error(error);
+    }
 });
 
-client.on('messageCreate', message => {
-    if (message.author.bot) return;
-    if (message.content === '!ping') {
-        message.reply('Dạaaaa hậu bối bot vẫn đang nghe senpai gọi nè! 🌸✨');
+// Lắng nghe khi gõ lệnh trong Discord
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName === 'dbio') {
+        const newBio = interaction.options.getString('text');
+        await interaction.reply({ 
+            content: `Dạaaaa lệnh /dbio đã nhận nội dung: **${newBio}** rùi nha senpai! 🌸✨`, 
+            ephemeral: true 
+        });
+    } 
+    
+    else if (interaction.commandName === 'davt') {
+        const imageAttachment = interaction.options.getAttachment('image');
+        const imageUrl = imageAttachment.url;
+        try {
+            const botMember = interaction.guild.members.me;
+            await botMember.edit({ avatar: imageUrl });
+            await interaction.reply({ 
+                content: `Dạaaaa avatar riêng của server này đã được đổi thành công rùi nè senpai nhaaa! ✨💖`, 
+                ephemeral: true 
+            });
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ 
+                content: 'Hổng đổi được avatar do giới hạn quyền của Discord API gòi senpai ơi! 🥺💔', 
+                ephemeral: true 
+            });
+        }
     }
 });
 
