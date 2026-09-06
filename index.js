@@ -24,7 +24,7 @@ const commands = [
     new SlashCommandBuilder()
         .setName('davt')
         .setDescription('Đổi avatar riêng cho bot')
-        .addImageOption(option =>
+        .addAttachmentOption(option =>
             option.setName('image')
                 .setDescription('Chọn ảnh avatar mới')
                 .setRequired(true))
