@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const http = require('http');
 
-// Web server ảo giữ cổng cho Render không bị timeout
+// Web server ảo giữ cổng cho Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Bot is running!\n');
@@ -12,7 +12,6 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] 
 });
 
-// Khai báo 2 lệnh /dbio và /davt
 const commands = [
     new SlashCommandBuilder()
         .setName('dbio')
@@ -45,7 +44,6 @@ client.once('ready', async () => {
     }
 });
 
-// Lắng nghe khi gõ lệnh trong Discord
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -56,7 +54,6 @@ client.on('interactionCreate', async interaction => {
             ephemeral: true 
         });
     } 
-    
     else if (interaction.commandName === 'davt') {
         const imageAttachment = interaction.options.getAttachment('image');
         const imageUrl = imageAttachment.url;
