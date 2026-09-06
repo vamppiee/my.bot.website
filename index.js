@@ -15,7 +15,7 @@ const client = new Client({
 const commands = [
     new SlashCommandBuilder()
         .setName('dbio')
-        .setDescription('Đổi bio riêng cho bot')
+        .setDescription('Cập nhật tiểu sử bot')
         .addStringOption(option =>
             option.setName('text')
                 .setDescription('Nội dung bio mới')
@@ -23,7 +23,7 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('davt')
-        .setDescription('Đổi avatar riêng cho bot')
+        .setDescription('Đổi avatar riêng của bot trong server này')
         .addAttachmentOption(option =>
             option.setName('image')
                 .setDescription('Chọn ảnh avatar mới')
@@ -58,16 +58,16 @@ client.on('interactionCreate', async interaction => {
         const imageAttachment = interaction.options.getAttachment('image');
         const imageUrl = imageAttachment.url;
         try {
-            const botMember = interaction.guild.members.me;
-            await botMember.edit({ avatar: imageUrl });
+            const botMember = await interaction.guild.members.fetchMe();
+            await botMember.setAvatar(imageUrl);
             await interaction.reply({ 
-                content: `Dạaaaa avatar riêng của server này đã được đổi thành công rùi nè senpai nhaaa! ✨💖`, 
+                content: `Dạaaaa avatar riêng của bot trong server này đã được đổi thành công rùi nè senpai nhaaa! ✨💖`, 
                 ephemeral: true 
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({ 
-                content: 'Hổng đổi được avatar do giới hạn quyền của Discord API gòi senpai ơi! 🥺💔', 
+                content: 'Hổng đổi được avatar do bot thiếu quyền quản lý trong server gòi senpai ơi! 🥺💔', 
                 ephemeral: true 
             });
         }
